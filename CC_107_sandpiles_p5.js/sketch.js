@@ -5,89 +5,63 @@
 // Sandpiles
 // https://youtu.be/diGjw5tghYU
 
+// Modified by Frode Austvik to create a variant
+
 let defaultColor = [255, 0, 0];
 let colors = [
-  [255, 255,   0],
-  [  0, 185,  63],
-  [  0, 104, 255],
-  [122,   0, 229]
+	[255, 255,   0],
+	[  0, 185,  63],
+	[  0, 104, 255],
+	[122,   0, 229]
 ];
 
 let sandpiles;
-let nextpiles;
+let grainsSlider;
+let grainsSpan;
 
 function setup() {
-  createCanvas(600, 600);
-  pixelDensity(1);
+	createCanvas(600, 600);
+	pixelDensity(1);
 
-  sandpiles = new Array(width).fill().map(i => new Array(height).fill(0));
-  nextpiles = new Array(width).fill().map(i => new Array(height).fill(0));
+	grainsSlider = createSlider(0, 100, 1, 1);
+	grainsSpan = createSpan();
 
-  sandpiles[width/2][height/2] = 1000000000;
+	sandpiles = new ExpandingRectangularSandpileGroup(0);
 
-  background(defaultColor[0], defaultColor[1], defaultColor[2]);
-}
-
-function topple() {
-  for (let x = 0; x < width; x++) {
-    for (let y = 0; y < height; y++) {
-      nextpiles[x][y] = sandpiles[x][y];
-    }
-  }
-
-  for (let x = 0; x < width; x++) {
-    for (let y = 0; y < height; y++) {
-      let num = sandpiles[x][y];
-      if (num >= 4) {
-        nextpiles[x][y] -= 4;
-        if (x+1 < width)
-          nextpiles[x+1][y]++;
-        if (x-1 >= 0)
-          nextpiles[x-1][y]++;
-        if (y+1 < height)
-          nextpiles[x][y+1]++;
-        if (y-1 >= 0)
-          nextpiles[x][y-1]++;
-      }
-    }
-  }
-
-  let tmp = sandpiles;
-  sandpiles = nextpiles;
-  nextpiles = tmp;
+	background(colors[0][0], colors[0][1], colors[0][2]);
 }
 
 function render() {
-  loadPixels();
-  for (let x = 0; x < width; x++) {
-    for (let y = 0; y < height; y++) {
-      let num = sandpiles[x][y];
-      let col = defaultColor;
-      if (num == 0) {
-        col = colors[0];
-      } else if (num == 1) {
-        col = colors[1];
-      } else if (num == 2) {
-        col = colors[2];
-      } else if (num == 3) {
-        col = colors[3];
-      }
+	loadPixels();
 
-      let pix = (x + y * width) * 4;
-      pixels[pix    ] = col[0];
-      pixels[pix + 1] = col[1];
-      pixels[pix + 2] = col[2];
-      // pixels[pix + 3] = 255;
-    }
-  }
+	let midX = Math.floor(width / 2), midY = Math.floor(height / 2);
+	let startX = midX + sandpiles.minX, startY = midY + sandpiles.minY;
+	let pilesWidth = sandpiles.maxX - sandpiles.minX + 1;
+	let pixelIndex = (startX + startY * width) * 4;
+	let pixelIndexStride = (width - pilesWidth) * 4;
 
-  updatePixels();
+	let leftPile = sandpiles.northWest;
+	while (leftPile !== null) {
+		for (let pile = leftPile; pile !== null; pile = pile.east) {
+			let col = colors[pile.grains] || defaultColor;
+
+			pixels[pixelIndex++] = col[0];
+			pixels[pixelIndex++] = col[1];
+			pixels[pixelIndex++] = col[2];
+			pixelIndex++; //pixels[pixelIndex++] = 255;
+		}
+		pixelIndex += pixelIndexStride;
+		leftPile = leftPile.south;
+	}
+
+	updatePixels();
 }
 
 function draw() {
-  render();
+	let grains = grainsSlider.value();
+	grainsSpan.html(grains);
 
-  for (let i = 0; i < 50; i++) {
-    topple();
-  }
+	sandpiles.addGrains(grains);
+
+	render();
 }
