@@ -46,6 +46,13 @@ function setup() {
 	createCheckbox('Finish toppling before rendering a frame', finishToppling)
 		.changed(function() { finishToppling = this.checked(); });
 
+	createLabelledSlider(1, 100, 60, 1, 'Target framerate:')
+		.input(function() { frameRate(this.value()); });
+
+	let framerateSpan = createSpan()
+		.parent(createDiv('Current est. framerate (while running): '));
+	setInterval(() => framerateSpan.html(frameRate()), 250);
+
 	runState = new RunState();
 
 	let startButton = createButton('Start');
@@ -93,7 +100,10 @@ function createLabelledSlider(min, max, start, step, labelText) {
 	let id = createNewId();
 	slider.elt.id = id;
 	label.elt.htmlFor = id;
-	slider.input(function() { span.html(this.value()); });
+	// For some reason, an event attached with slider.input() stops working if
+	// someone else later calls slider.input() again, and we want to let them
+	// use that if they want to, so we use the underlying API here.
+	slider.elt.addEventListener('input', e => span.html(slider.value()), false);
 	return slider;
 }
 
