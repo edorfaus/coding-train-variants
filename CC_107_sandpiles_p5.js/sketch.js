@@ -20,6 +20,7 @@ let grainsSlider;
 let renderer;
 let finishToppling;
 let toppleCountSlider;
+let runState;
 
 let wasComplete = true;
 
@@ -31,6 +32,9 @@ function setup() {
 	createCheckbox('Zoom', true).changed(function() {
 		renderer = this.checked() ? renderZoomed : renderPixels;
 		background(colors[0][0], colors[0][1], colors[0][2]);
+		if (runState.state === STATE_STOPPED) {
+			redraw();
+		}
 	});
 
 	grainsSlider = createLabelledSlider(0, 100, 1, 1, 'Grains added each time:');
@@ -42,7 +46,40 @@ function setup() {
 	createCheckbox('Finish toppling before rendering a frame', finishToppling)
 		.changed(function() { finishToppling = this.checked(); });
 
-	sandpiles = new ExpandingRectangularSandpileGroup(0);
+	runState = new RunState();
+
+	let startButton = createButton('Start');
+	runState.addListener((newState, oldState) => {
+		if (newState === STATE_STOPPED) {
+			startButton.html('Start');
+		} else {
+			startButton.html('Stop');
+		}
+	});
+	startButton.mouseClicked(() => {
+		if (runState.state === STATE_STOPPED) {
+			runState.start();
+		} else {
+			runState.stop();
+		}
+	});
+
+	createButton('Single step').mouseClicked(() => runState.singleStep());
+
+	createButton('Reset').mouseClicked(() => {
+		sandpiles = new ExpandingRectangularSandpileGroup(1);
+
+		background(colors[0][0], colors[0][1], colors[0][2]);
+
+		// Ensure we draw a single step (without adding grains), to reset
+		// things like the toppling-incomplete state
+		wasComplete = false;
+		runState.singleStep();
+	});
+
+	runState.stop();
+
+	sandpiles = new ExpandingRectangularSandpileGroup(1);
 
 	background(colors[0][0], colors[0][1], colors[0][2]);
 }
@@ -126,15 +163,17 @@ function renderZoomed() {
 }
 
 function draw() {
-	let grains = grainsSlider.value();
-	let toppleCount = toppleCountSlider.value();
+	if (runState.doStep()) {
+		let grains = grainsSlider.value();
+		let toppleCount = toppleCountSlider.value();
 
-	if (wasComplete) {
-		sandpiles.addGrains(grains);
+		if (wasComplete) {
+			sandpiles.addGrains(grains);
+		}
+		wasComplete = sandpiles.topple(finishToppling ? null : toppleCount);
+
+		document.body.classList.toggle('incomplete', !wasComplete);
 	}
-	wasComplete = sandpiles.topple(finishToppling ? null : toppleCount);
-
-	document.body.classList.toggle('incomplete', !wasComplete);
 
 	renderer();
 }
