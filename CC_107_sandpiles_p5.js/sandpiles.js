@@ -60,6 +60,8 @@ class RectangularSandpileGroup {
 			origin = origin.south;
 		}
 		this.origin = origin;
+
+		this.toppleState = new Set();
 	}
 	getPile(x, y) {
 		if (x < this.minX || x > this.maxX || y < this.minY || y > this.maxY) {
@@ -90,41 +92,64 @@ class RectangularSandpileGroup {
 			throw new Error('Invalid coordinates: out of bounds');
 		}
 		pile.grains += grains;
-		let pilesToCheckForTopple = new Set();
-		pilesToCheckForTopple.add(pile);
-		pilesToCheckForTopple.forEach(this.checkForTopple, this);
+		if (pile.grains >= 4) {
+			this.toppleState.add(pile);
+		}
 	}
-	checkForTopple(pile, pile_, pilesToCheck) {
-		pilesToCheck.delete(pile);
+	/**
+	 * Run the toppling algorithm on this board.
+	 * @param maxChecks null|int How many piles to check and (if necessary)
+	 *     topple before returning. If null, runs until toppling is completed.
+	 * @return bool Whether the toppling is complete (no more piles to check).
+	 */
+	topple(maxChecks = null) {
+		if (maxChecks !== 0) {
+			if (maxChecks === null) {
+				this.toppleState.forEach(this.checkForTopple, this);
+			} else {
+				let remaining = maxChecks;
+				for (let pile of this.toppleState) {
+					this.checkForTopple(pile);
+					remaining--;
+					if (remaining == 0) {
+						break;
+					}
+				}
+			}
+		}
+		return this.toppleState.size == 0;
+	}
+	checkForTopple(pile) {
+		this.toppleState.delete(pile);
 		if (pile.grains >= 4) {
 			let grainsPerNeighbor = Math.floor(pile.grains / 4);
 			pile.grains -= grainsPerNeighbor * 4;
-			this.handleToppleSpread(grainsPerNeighbor, pile, pilesToCheck);
+			this.handleToppleSpread(grainsPerNeighbor, pile);
 		}
 	}
-	handleToppleSpread(grainsPerNeighbor, pile, pilesToCheck) {
+	handleToppleSpread(grainsPerNeighbor, pile) {
 		if (pile.north !== null) {
 			pile.north.grains += grainsPerNeighbor;
 			if (pile.north.grains >= 4) {
-				pilesToCheck.add(pile.north);
+				this.toppleState.add(pile.north);
 			}
 		}
 		if (pile.west !== null) {
 			pile.west.grains += grainsPerNeighbor;
 			if (pile.west.grains >= 4) {
-				pilesToCheck.add(pile.west);
+				this.toppleState.add(pile.west);
 			}
 		}
 		if (pile.east !== null) {
 			pile.east.grains += grainsPerNeighbor;
 			if (pile.east.grains >= 4) {
-				pilesToCheck.add(pile.east);
+				this.toppleState.add(pile.east);
 			}
 		}
 		if (pile.south !== null) {
 			pile.south.grains += grainsPerNeighbor;
 			if (pile.south.grains >= 4) {
-				pilesToCheck.add(pile.south);
+				this.toppleState.add(pile.south);
 			}
 		}
 	}
@@ -147,7 +172,7 @@ class ExpandingRectangularSandpileGroup extends RectangularSandpileGroup {
 	constructor(maxX = 1, maxY = maxX, minX = -maxX, minY = -maxY) {
 		super(maxX, maxY, minX, minY);
 	}
-	handleToppleSpread(grainsPerNeighbor, pile, pilesToCheck) {
+	handleToppleSpread(grainsPerNeighbor, pile) {
 		if (pile.north === null) {
 			this.expandNorth();
 		}
@@ -163,22 +188,22 @@ class ExpandingRectangularSandpileGroup extends RectangularSandpileGroup {
 
 		pile.north.grains += grainsPerNeighbor;
 		if (pile.north.grains >= 4) {
-			pilesToCheck.add(pile.north);
+			this.toppleState.add(pile.north);
 		}
 
 		pile.west.grains += grainsPerNeighbor;
 		if (pile.west.grains >= 4) {
-			pilesToCheck.add(pile.west);
+			this.toppleState.add(pile.west);
 		}
 
 		pile.east.grains += grainsPerNeighbor;
 		if (pile.east.grains >= 4) {
-			pilesToCheck.add(pile.east);
+			this.toppleState.add(pile.east);
 		}
 
 		pile.south.grains += grainsPerNeighbor;
 		if (pile.south.grains >= 4) {
-			pilesToCheck.add(pile.south);
+			this.toppleState.add(pile.south);
 		}
 	}
 	expandWest() {

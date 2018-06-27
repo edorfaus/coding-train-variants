@@ -17,8 +17,11 @@ let colors = [
 
 let sandpiles;
 let grainsSlider;
-let grainsSpan;
 let renderer;
+let finishToppling;
+let toppleCountSlider;
+
+let wasComplete = true;
 
 function setup() {
 	createCanvas(600, 600);
@@ -30,18 +33,31 @@ function setup() {
 		background(colors[0][0], colors[0][1], colors[0][2]);
 	});
 
-	let div = createDiv();
-	let label = createElement('label', 'Grains added per frame:');
-	label.parent(createDiv().parent(div));
-	grainsSlider = createSlider(0, 100, 1, 1).parent(div);
-	grainsSpan = createSpan().parent(div);
-	let id = createNewId();
-	grainsSlider.elt.id = id;
-	label.elt.htmlFor = id;
+	grainsSlider = createLabelledSlider(0, 100, 1, 1, 'Grains added each time:');
+
+	toppleCountSlider = createLabelledSlider(
+		0, 1000, 100, 1, 'Max piles to topple per frame:');
+
+	finishToppling = false;
+	createCheckbox('Finish toppling before rendering a frame', finishToppling)
+		.changed(function() { finishToppling = this.checked(); });
 
 	sandpiles = new ExpandingRectangularSandpileGroup(0);
 
 	background(colors[0][0], colors[0][1], colors[0][2]);
+}
+
+function createLabelledSlider(min, max, start, step, labelText) {
+	let div = createDiv();
+	let label = createElement('label', labelText);
+	label.parent(createDiv().parent(div));
+	let slider = createSlider(min, max, start, step).parent(div);
+	let span = createSpan(slider.value()).parent(div);
+	let id = createNewId();
+	slider.elt.id = id;
+	label.elt.htmlFor = id;
+	slider.input(function() { span.html(this.value()); });
+	return slider;
 }
 
 function createNewId() {
@@ -111,9 +127,14 @@ function renderZoomed() {
 
 function draw() {
 	let grains = grainsSlider.value();
-	grainsSpan.html(grains);
+	let toppleCount = toppleCountSlider.value();
 
-	sandpiles.addGrains(grains);
+	if (wasComplete) {
+		sandpiles.addGrains(grains);
+	}
+	wasComplete = sandpiles.topple(finishToppling ? null : toppleCount);
+
+	document.body.classList.toggle('incomplete', !wasComplete);
 
 	renderer();
 }
