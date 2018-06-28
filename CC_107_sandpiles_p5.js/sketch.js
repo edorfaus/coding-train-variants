@@ -21,6 +21,7 @@ let renderer;
 let finishToppling;
 let toppleCountSlider;
 let runState;
+let frameRateEstimator;
 
 let wasComplete = true;
 
@@ -49,11 +50,13 @@ function setup() {
 	createLabelledSlider(1, 100, 60, 1, 'Target framerate:')
 		.input(function() { frameRate(this.value()); });
 
+	runState = new RunState();
+
+	frameRateEstimator = new FrameRateEstimator(runState);
+
 	let framerateSpan = createSpan()
 		.parent(createDiv('Current est. framerate (while running): '));
-	setInterval(() => framerateSpan.html(frameRate()), 250);
-
-	runState = new RunState();
+	setInterval(() => framerateSpan.html(frameRateEstimator.frameRate()), 250);
 
 	let startButton = createButton('Start');
 	runState.addListener((newState, oldState) => {
@@ -174,6 +177,8 @@ function renderZoomed() {
 
 function draw() {
 	if (runState.doStep()) {
+		frameRateEstimator.frame();
+
 		let grains = grainsSlider.value();
 		let toppleCount = toppleCountSlider.value();
 
