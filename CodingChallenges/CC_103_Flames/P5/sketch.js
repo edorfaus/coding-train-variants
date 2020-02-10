@@ -13,6 +13,24 @@
 // To set a single pixel, this code therefore has to multiply the
 // indexes by 4, and then set 4 consecutive entries in the pixel array.
 
+// The next problem is that this runs a lot slower than the Processing
+// version does, so we need to do some optimization to get a decent
+// framerate.
+//
+// One simple and very effective optimization we can do here is to
+// improve the way the cooling map image is updated on every frame.
+//
+// In the original, the entire image is redrawn based on data from the
+// noise() function on every frame, in such a way that the image is
+// moved up by one pixel and the bottom row is filled in with new data.
+//
+// Here, we change that to only use the noise() function for that new
+// row at the bottom, while moving the existing pixels up as they are.
+//
+// This is done in a sequence of steps:
+// - swap the loops in cool() to have y as the outer loop, x as inner,
+//   so that it draws one row at a time instead of a column at a time.
+
 let buffer1;
 let buffer2;
 let cooling;
@@ -31,14 +49,15 @@ function setup() {
 
 function cool() {
   cooling.loadPixels();
-  let xoff = 0.0; // Start xoff at 0
+  let yoff = ystart; // Start yoff at 0
   let increment = 0.02;
   // For every x,y coordinate in a 2D space, calculate a noise value and produce a brightness value
-  for (let x = 0; x < w; x++) {
-    xoff += increment; // Increment xoff
-    let yoff = ystart; // For every xoff, start yoff at 0
-    for (let y = 0; y < h; y++) {
-      yoff += increment; // Increment yoff
+  for (let y = 0; y < h; y++) {
+    yoff += increment; // Increment yoff
+
+    let xoff = 0.0; // For every yoff, start xoff at 0
+    for (let x = 0; x < w; x++) {
+      xoff += increment; // Increment xoff
 
       // Calculate noise and scale by 255
       let n = noise(xoff, yoff);
