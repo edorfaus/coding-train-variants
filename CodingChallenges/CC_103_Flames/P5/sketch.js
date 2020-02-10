@@ -34,15 +34,15 @@
 // - move the inner loop (drawing a row) out to a new function.
 // - move the outer loop to setup() so it is only done once.
 // - add copy() call to move pixels up, and then draw the next row.
+// - remove the unneeded ystart variable, and increase the resolution.
 
 let buffer1;
 let buffer2;
 let cooling;
-const w = 300;
-const h = 200;
+const w = 600;
+const h = 400;
 
-let ystart = 0.0;
-let yoff = ystart; // Start yoff at 0
+let yoff = 0.0; // Start yoff at 0
 const increment = 0.02;
 
 function setup() {
