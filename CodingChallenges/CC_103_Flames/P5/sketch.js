@@ -33,6 +33,7 @@
 // - move the increment and yoff variables out to global scope.
 // - move the inner loop (drawing a row) out to a new function.
 // - move the outer loop to setup() so it is only done once.
+// - add copy() call to move pixels up, and then draw the next row.
 
 let buffer1;
 let buffer2;
@@ -62,6 +63,21 @@ function setup() {
 }
 
 function cool() {
+  // Copy pixels within the image, to move everything up one row.
+  //
+  // The arguments here are the source rectangle followed by the target
+  // rectangle (where to copy from followed by where to copy to), both
+  // given as the top-left X,Y position then the width and height.
+  //
+  // So, this takes a rectangle that is as wide as the image, and one
+  // pixel less tall than it, starting one pixel down from the top, and
+  // copies that to the top of the image - thus moving it up one pixel.
+  cooling.copy(0, 1, w, h - 1, 0, 0, w, h - 1);
+
+  cooling.loadPixels();
+  yoff += increment; // Increment yoff to move to the next row
+  drawCoolingRow(h - 1); // Draw the new last row in the image
+  cooling.updatePixels();
 }
 
 function drawCoolingRow(y) {
