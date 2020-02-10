@@ -30,6 +30,7 @@
 // This is done in a sequence of steps:
 // - swap the loops in cool() to have y as the outer loop, x as inner,
 //   so that it draws one row at a time instead of a column at a time.
+// - move the increment and yoff variables out to global scope.
 
 let buffer1;
 let buffer2;
@@ -38,6 +39,8 @@ const w = 300;
 const h = 200;
 
 let ystart = 0.0;
+let yoff = ystart; // Start yoff at 0
+const increment = 0.02;
 
 function setup() {
   pixelDensity(1);
@@ -49,8 +52,7 @@ function setup() {
 
 function cool() {
   cooling.loadPixels();
-  let yoff = ystart; // Start yoff at 0
-  let increment = 0.02;
+  yoff = ystart; // Start yoff at the top of the image
   // For every x,y coordinate in a 2D space, calculate a noise value and produce a brightness value
   for (let y = 0; y < h; y++) {
     yoff += increment; // Increment yoff
