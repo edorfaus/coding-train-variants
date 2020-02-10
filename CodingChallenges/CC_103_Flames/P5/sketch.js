@@ -3,6 +3,8 @@
 // https://thecodingtrain.com/CodingChallenges/103-fire-effect.html
 // https://youtu.be/X0kjv0MozuY
 
+// Modified by Frode Austvik
+
 // Algorithm: https://web.archive.org/web/20160418004150/http://freespace.virgin.net/hugo.elias/models/m_fire.htm
 
 // The biggest difference from the Processing version this is based on
@@ -60,6 +62,16 @@ function setup() {
     drawCoolingRow(y);
   }
   cooling.updatePixels();
+
+  createP(
+    'This version applies a simple optimization: ' +
+    'instead of recreating the entire cooling map for every frame, ' +
+    'just scroll it up by a pixel and fill in the new bottom row.'
+  );
+  createP(
+    'This is explained in more detail in the ' +
+    '<a href="sketch.js">source code</a>.'
+  );
 }
 
 function cool() {
