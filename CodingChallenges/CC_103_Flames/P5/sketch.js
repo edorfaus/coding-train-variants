@@ -32,6 +32,7 @@
 //   so that it draws one row at a time instead of a column at a time.
 // - move the increment and yoff variables out to global scope.
 // - move the inner loop (drawing a row) out to a new function.
+// - move the outer loop to setup() so it is only done once.
 
 let buffer1;
 let buffer2;
@@ -49,20 +50,18 @@ function setup() {
   buffer1 = createGraphics(w, h);
   buffer2 = createGraphics(w, h);
   cooling = createImage(w, h);
-}
 
-function cool() {
   cooling.loadPixels();
-  yoff = ystart; // Start yoff at the top of the image
   // For every x,y coordinate in a 2D space, calculate a noise value and produce a brightness value
   for (let y = 0; y < h; y++) {
     yoff += increment; // Increment yoff
 
     drawCoolingRow(y);
   }
-
   cooling.updatePixels();
-  ystart += increment;
+}
+
+function cool() {
 }
 
 function drawCoolingRow(y) {
