@@ -31,6 +31,7 @@
 // - swap the loops in cool() to have y as the outer loop, x as inner,
 //   so that it draws one row at a time instead of a column at a time.
 // - move the increment and yoff variables out to global scope.
+// - move the inner loop (drawing a row) out to a new function.
 
 let buffer1;
 let buffer2;
@@ -57,28 +58,32 @@ function cool() {
   for (let y = 0; y < h; y++) {
     yoff += increment; // Increment yoff
 
-    let xoff = 0.0; // For every yoff, start xoff at 0
-    for (let x = 0; x < w; x++) {
-      xoff += increment; // Increment xoff
-
-      // Calculate noise and scale by 255
-      let n = noise(xoff, yoff);
-      let bright = pow(n, 3) * 255;
-
-      // Try using this line instead
-      //float bright = random(0,255);
-
-      // Set each pixel onscreen to a grayscale value
-      let index = (x + y * w) * 4;
-      cooling.pixels[index] = bright;
-      cooling.pixels[index + 1] = bright;
-      cooling.pixels[index + 2] = bright;
-      cooling.pixels[index + 3] = 255;
-    }
+    drawCoolingRow(y);
   }
 
   cooling.updatePixels();
   ystart += increment;
+}
+
+function drawCoolingRow(y) {
+  let xoff = 0.0; // For every row, start xoff at 0
+  for (let x = 0; x < w; x++) {
+    xoff += increment; // Increment xoff
+
+    // Calculate noise and scale by 255
+    let n = noise(xoff, yoff);
+    let bright = pow(n, 3) * 255;
+
+    // Try using this line instead
+    //float bright = random(0,255);
+
+    // Set each pixel onscreen to a grayscale value
+    let index = (x + y * w) * 4;
+    cooling.pixels[index] = bright;
+    cooling.pixels[index + 1] = bright;
+    cooling.pixels[index + 2] = bright;
+    cooling.pixels[index + 3] = 255;
+  }
 }
 
 function fire(rows) {
